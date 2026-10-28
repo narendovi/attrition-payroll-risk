@@ -30,6 +30,14 @@ engine = get_engine()
 # ── Load Data ────────────────────────────────────────────────────────────
 @st.cache_data
 def load_data():
+    # Always use CSV on cloud, MySQL locally
+    csv_path = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+        'data', 'processed', 'dashboard_data.csv'
+    )
+    if os.path.exists(csv_path):
+        return pd.read_csv(csv_path)
+    # Fallback to MySQL if CSV not found
     query = """
         SELECT e.*, f.Attrition_Flag, f.Compensation_Ratio, f.Hike_Band,
                f.OverTime_Flag, f.Overtime_LowHike_Risk, f.Tenure_Per_Level,
@@ -43,11 +51,12 @@ def load_data():
 
 @st.cache_resource
 def load_model():
-    with open('/Users/naren/Projects/attrition-payroll-risk/models/attrition_model.pkl', 'rb') as f:
+    base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    with open(os.path.join(base, 'models', 'attrition_model.pkl'), 'rb') as f:
         model = pickle.load(f)
-    with open('/Users/naren/Projects/attrition-payroll-risk/models/scaler.pkl', 'rb') as f:
+    with open(os.path.join(base, 'models', 'scaler.pkl'), 'rb') as f:
         scaler = pickle.load(f)
-    with open('/Users/naren/Projects/attrition-payroll-risk/models/feature_cols.pkl', 'rb') as f:
+    with open(os.path.join(base, 'models', 'feature_cols.pkl'), 'rb') as f:
         features = pickle.load(f)
     return model, scaler, features
 
